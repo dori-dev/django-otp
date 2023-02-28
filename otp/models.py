@@ -20,4 +20,4 @@ class MyUser(AbstractUser):
     objects = UserManager()
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
-    backend = ''
+    backend = 'otp.authentication.PhoneBackend'
