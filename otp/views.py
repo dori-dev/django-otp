@@ -12,7 +12,8 @@ def register(request: WSGIRequest):
     if request.method == 'POST':
         phone = request.POST.get('phone')
         otp = generate_otp()
-        send_otp(phone, otp)
+        # send_otp(phone, otp)
+        print(f'Verify code: {otp}')
         try:
             user = MyUser.objects.get(phone=phone)
             user.otp = otp
@@ -36,22 +37,25 @@ def register(request: WSGIRequest):
 
 def verify(request: WSGIRequest):
     phone = request.session.get('phone_number')
+    try:
+        user: MyUser = MyUser.objects.get(phone=phone)
+    except MyUser.DoesNotExist:
+        return redirect('register')
+    if request.method == "POST":
+        otp = request.POST.get('otp')
+        if user.otp != int(otp):
+            return redirect('verify')
+        user.is_active = True
+        user.save()
+        login(
+            request,
+            user,
+            backend='otp.authentications.PhoneBackend'
+        )
+        return redirect('dashboard')
     context = {
         'phone': phone
     }
-    # if request.method == "POST":
-    #     if "phone" in request.POST:
-    #         phone = request.POST.get('phone')
-    #         try:
-    #             user = MyUser.objects.get(phone=phone)
-    #             login(
-    #                 request,
-    #                 user,
-    #                 backend='otp.authentications.PhoneBackend',
-    #             )
-    #             return redirect('dashboard')
-    #         except MyUser.DoesNotExist:
-    #             pass
     return render(request, 'verify.html', context)
 
 
