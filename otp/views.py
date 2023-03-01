@@ -4,7 +4,7 @@ from django.core.handlers.wsgi import WSGIRequest
 
 from .models import MyUser
 from .forms import RegisterForm
-from .utils import generate_otp, send_otp
+from .utils import generate_otp, send_otp, check_otp_expiration
 
 
 def register(request: WSGIRequest):
@@ -42,6 +42,8 @@ def verify(request: WSGIRequest):
     except MyUser.DoesNotExist:
         return redirect('register')
     if request.method == "POST":
+        if not check_otp_expiration(phone):
+            return redirect('register')
         otp = request.POST.get('otp')
         if user.otp != int(otp):
             return redirect('verify')
