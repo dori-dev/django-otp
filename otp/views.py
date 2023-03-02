@@ -1,19 +1,24 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
 from django.core.handlers.wsgi import WSGIRequest
+from django.contrib import messages
 
 from .models import MyUser
 from .forms import RegisterForm
-from .utils import generate_otp, send_otp, check_otp_expiration
+from . import utils
 
 
 def register(request: WSGIRequest):
     form = RegisterForm()
     if request.method == 'POST':
         phone = request.POST.get('phone')
-        otp = generate_otp()
-        # send_otp(phone, otp)
+        otp = utils.generate_otp()
+        # utils.send_otp(phone, otp)
         print(f'Verify code: {otp}')
+        messages.success(
+            request,
+            'Verification code send successfully!'
+        )
         try:
             user = MyUser.objects.get(phone=phone)
             user.otp = otp
@@ -37,24 +42,25 @@ def register(request: WSGIRequest):
 
 def verify(request: WSGIRequest):
     phone = request.session.get('phone_number')
-    try:
-        user: MyUser = MyUser.objects.get(phone=phone)
-    except MyUser.DoesNotExist:
+    if phone is None:
         return redirect('register')
     if request.method == "POST":
-        if not check_otp_expiration(phone):
-            return redirect('register')
         otp = request.POST.get('otp')
-        if user.otp != int(otp):
-            return redirect('verify')
-        user.is_active = True
-        user.save()
-        login(
+        user = authenticate(
             request,
-            user,
-            backend='otp.authentications.PhoneBackend'
+            username=phone,
+            password=otp
         )
-        return redirect('dashboard')
+        if user is not None:
+            user.is_active = True
+            user.save()
+            login(request, user)
+            messages.success(
+                request,
+                'You login successfully.',
+            )
+            request.session['phone_number'] = None
+            return redirect('dashboard')
     context = {
         'phone': phone
     }

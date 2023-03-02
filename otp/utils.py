@@ -30,13 +30,9 @@ def generate_otp(length=4):
     return "".join(choices("123456789", k=length))
 
 
-def check_otp_expiration(phone):
-    try:
-        user: MyUser = MyUser.objects.get(phone=phone)
-        otp_time = user.otp_create_time
-        diff = now() - otp_time
-        if diff.seconds > 30:
-            return False
-    except MyUser.DoesNotExist:
+def check_otp_expiration(user: MyUser):
+    otp_time = user.otp_create_time
+    diff = now() - otp_time
+    if diff.seconds > 30:
         return False
     return True
