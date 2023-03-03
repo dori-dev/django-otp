@@ -6,9 +6,11 @@ from kavenegar import (
     APIException,
     HTTPException,
 )
+from background_task import background
 from .models import MyUser
 
 
+@background(schedule=0)
 def send_otp(phone, otp):
     try:
         api = KavenegarAPI(settings.API_KEY)
@@ -33,6 +35,6 @@ def generate_otp(length=4):
 def check_otp_expiration(user: MyUser):
     otp_time = user.otp_create_time
     diff = now() - otp_time
-    if diff.seconds > 30:
+    if diff.seconds > 120:
         return False
     return True

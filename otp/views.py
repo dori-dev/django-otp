@@ -13,8 +13,7 @@ def register(request: WSGIRequest):
     if request.method == 'POST':
         phone = request.POST.get('phone')
         otp = utils.generate_otp()
-        # utils.send_otp(phone, otp)
-        print(f'Verify code: {otp}')
+        utils.send_otp(phone, otp)
         messages.success(
             request,
             'Verification code send successfully!'
