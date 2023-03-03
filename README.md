@@ -50,7 +50,7 @@ python manage.py createsuperuser
 
 ## Set API KEY
 
-Set you API key in settings.py file
+Set you API key in settings.py file in `API_KEY` variable.
 
 ## Run Project
 
